@@ -1,0 +1,4 @@
+#Sat Apr 06 17:43:13 CST 2019
+base.0=C\:\\D\\JAVA\\MFAnime\\app\\build\\intermediates\\transforms\\dexMerger\\debug\\6
+path.0=classes.dex
+renamed.0=classes.dex
