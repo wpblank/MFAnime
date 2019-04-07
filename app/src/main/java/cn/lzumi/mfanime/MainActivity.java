@@ -3,10 +3,12 @@ package cn.lzumi.mfanime;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -31,6 +33,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import cn.lzumi.mfanime.adapter.AnimeAdapter;
 import cn.lzumi.mfanime.bean.Anime;
 import cn.lzumi.mfanime.tools.Constant;
 import cn.lzumi.mfanime.tools.HttpRequest;
@@ -43,7 +47,9 @@ import static cn.lzumi.mfanime.tools.loginInfo.readToken;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private List<Anime> animeList = new ArrayList<>();
+    RecyclerView recyclerView;
     RequestQueue requestQueue;
+    SwipeRefreshLayout swipeRefresh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,8 +69,18 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        //下拉刷新
+        swipeRefresh = findViewById(R.id.swipe_refresh);
+        swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshFruits();
+            }
+        });
+
         //初始化首页
-        RecyclerView recyclerView = findViewById(R.id.recycler_view);
+        recyclerView = findViewById(R.id.recycler_view);
         initAnime(animeList, this, recyclerView);
         onLogin();
     }
@@ -275,6 +291,18 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
         normalDialog.show();
+    }
+
+    //下拉刷新
+    private void refreshFruits() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                animeList.clear();
+                initAnime(animeList, MainActivity.this, recyclerView);
+                swipeRefresh.setRefreshing(false);
+            }
+        },1000);
     }
 
 }

@@ -82,7 +82,7 @@
                     android:layout_gravity="center_vertical"
                     android:layout_marginStart="10dp"
                     android:layout_weight="2"
-                    android:text="简介\n  &amp;\n观后感：" />
+                    android:text="简介\n  &amp;\n点评：" />
 
                 <EditText
                     android:id="@+id/add_anime_comment"

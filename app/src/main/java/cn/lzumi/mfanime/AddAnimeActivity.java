@@ -58,13 +58,15 @@ public class AddAnimeActivity extends BaseActivity {
                 final Dialog dialog = WaitingInterface.createLoadingDialog(AddAnimeActivity.this, "");
                 CardView cv_add_anime_name = findViewById(R.id.cv_add_anime_name);
                 EditText add_anime_name = cv_add_anime_name.findViewById(R.id.add_anime_name);
-                params.put("name", add_anime_name.getText().toString().trim());
+                String name = add_anime_name.getText().toString().trim();
+                params.put("name", name);
 
-                params.put("userName",readLoginUserName(AddAnimeActivity.this));
+                params.put("userName", readLoginUserName(AddAnimeActivity.this));
 
                 CardView cv_add_anime_comment = findViewById(R.id.cv_add_anime_comment);
                 EditText add_anime_comment = cv_add_anime_comment.findViewById(R.id.add_anime_comment);
-                params.put("comment", add_anime_comment.getText().toString().trim());
+                String comment = add_anime_comment.getText().toString().trim();
+                params.put("comment", comment);
 
                 CardView cv_add_anime_pic = findViewById(R.id.cv_add_anime_pic);
                 EditText add_anime_pic = cv_add_anime_pic.findViewById(R.id.add_anime_pic);
@@ -74,36 +76,58 @@ public class AddAnimeActivity extends BaseActivity {
                 EditText add_anime_bilibili = cv_add_anime_bilibili.findViewById(R.id.add_anime_bilibili);
                 params.put("bilibili", add_anime_bilibili.getText().toString().trim());
 
-                HttpRequest.httpStringPost(Constant.prefix + "/anime/", requestQueue, params, new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        switch (response) {
-                            case "添加成功": {
-                                WaitingInterface.closeDialog(dialog);
-                                Toast toast = Toast.makeText(AddAnimeActivity.this, "mi", Toast.LENGTH_SHORT);
-                                toast.setText("添加成功");
-                                toast.show();
-                                AddAnimeActivity.this.finish();
-                                break;
-                            }
-                            case "添加失败": {
-                                WaitingInterface.closeDialog(dialog);
-                                Toast toast = Toast.makeText(AddAnimeActivity.this, "mi", Toast.LENGTH_SHORT);
-                                toast.setText("添加失败");
-                                toast.show();
-                                break;
-                            }
-                            default: {
-                                WaitingInterface.closeDialog(dialog);
-                                Toast toast = Toast.makeText(AddAnimeActivity.this, "mi", Toast.LENGTH_SHORT);
-                                toast.setText("未知错误");
-                                toast.show();
-                                System.out.println(response);
-                                break;
+                if (!name.equals("") && !comment.equals(""))
+                    HttpRequest.httpStringPost(Constant.prefix + "/anime/", requestQueue, params, new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            switch (response) {
+                                case "添加成功": {
+                                    WaitingInterface.closeDialog(dialog);
+                                    Toast toast = Toast.makeText(AddAnimeActivity.this, "mi", Toast.LENGTH_SHORT);
+                                    toast.setText("添加成功");
+                                    toast.show();
+                                    AddAnimeActivity.this.finish();
+                                    break;
+                                }
+                                case "添加失败": {
+                                    WaitingInterface.closeDialog(dialog);
+                                    Toast toast = Toast.makeText(AddAnimeActivity.this, "mi", Toast.LENGTH_SHORT);
+                                    toast.setText("添加失败");
+                                    toast.show();
+                                    break;
+                                }
+                                default: {
+                                    WaitingInterface.closeDialog(dialog);
+                                    Toast toast = Toast.makeText(AddAnimeActivity.this, "mi", Toast.LENGTH_SHORT);
+                                    toast.setText("未知错误");
+                                    toast.show();
+                                    System.out.println(response);
+                                    break;
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                else{
+                    WaitingInterface.closeDialog(dialog);
+                    AlertDialog.Builder normalDialog = new AlertDialog.Builder(AddAnimeActivity.this);
+                    normalDialog.setMessage("名称和简介不能为空");
+                    normalDialog.setPositiveButton("取消",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    //Nothing-To-do
+                                }
+                            });
+                    normalDialog.setNegativeButton("确定",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    //Nothing-To-do
+                                }
+                            });
+                    normalDialog.show();
+                }
+
             }
         });
     }
