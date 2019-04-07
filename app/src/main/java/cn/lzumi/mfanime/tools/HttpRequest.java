@@ -1,6 +1,8 @@
 package cn.lzumi.mfanime.tools;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.util.Base64;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -15,6 +17,8 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Map;
 
 public class HttpRequest {
@@ -34,38 +38,39 @@ public class HttpRequest {
 
     /**
      * GET方法
-     * @param url GET方法地址
+     *
+     * @param url          GET方法地址
      * @param requestQueue
      * @param listener
      */
-    public static void httpGet(String url,RequestQueue requestQueue,Response.Listener<JSONObject> listener) {
+    public static void httpGet(String url, RequestQueue requestQueue, Response.Listener<JSONObject> listener) {
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-               listener, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        System.out.println("连接错误"+error.getMessage());
-                    }
-                });
+                listener, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                System.out.println("连接错误" + error.getMessage());
+            }
+        });
         requestQueue.add(jsonObjectRequest);
     }
 
     //返回JSON数组的GET方法
-    public static void httpJSONArrayGet(String url,RequestQueue requestQueue,Response.Listener<JSONArray> listener) {
+    public static void httpJSONArrayGet(String url, RequestQueue requestQueue, Response.Listener<JSONArray> listener) {
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(url, listener, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                System.out.println("连接错误"+error.getMessage());
+                System.out.println("连接错误" + error.getMessage());
             }
         });
         requestQueue.add(jsonArrayRequest);
     }
 
-    public static void httpStringGet(String url,RequestQueue requestQueue,Response.Listener<String> listener) {
+    public static void httpStringGet(String url, RequestQueue requestQueue, Response.Listener<String> listener) {
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 listener, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                System.out.println("连接错误"+error.getMessage());
+                System.out.println("连接错误" + error.getMessage());
             }
         });
         requestQueue.add(stringRequest);
@@ -76,15 +81,62 @@ public class HttpRequest {
                 listener, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                System.out.println("连接错误"+error.getMessage());
+                System.out.println("连接错误" + error.getMessage());
             }
-        }){
+        }) {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 return params;
             }
         };
 
+
         requestQueue.add(stringRequest);
+    }
+
+    public static void picStringPost(final Bitmap bitmap, String url, RequestQueue requestQueue, final Map<String, String> params, Response.Listener<String> listener){
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                listener, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                System.out.println("连接错误" + error.getMessage());
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                params.put("file",bitmapToBase64(bitmap));
+                return params;
+            }
+        };
+
+
+        requestQueue.add(stringRequest);
+    }
+
+    public static String bitmapToBase64(Bitmap bitmap) {
+        String result = null;
+        ByteArrayOutputStream baos = null;
+        try {
+            if (bitmap != null) {
+                baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                baos.flush();
+                baos.close();
+                byte[] bitmapBytes = baos.toByteArray();
+                result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (baos != null) {
+                    baos.flush();
+                    baos.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
     }
 }
