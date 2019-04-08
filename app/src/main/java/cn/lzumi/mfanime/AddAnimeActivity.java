@@ -24,6 +24,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,11 +33,23 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.google.gson.JsonObject;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -153,6 +166,7 @@ public class AddAnimeActivity extends BaseActivity {
             imagePath = uri.getPath();
         }
         displayImage(imagePath); // 根据图片路径显示图片
+        uploadImage(imagePath);
     }
 
     private String getImagePath(Uri uri, String selection) {
@@ -177,14 +191,92 @@ public class AddAnimeActivity extends BaseActivity {
         }
     }
 
-    private String uploadImage(String imagePath) {
+    private void uploadImage(String imagePath) {
         if (imagePath != null) {
-            Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
-            imageView.setImageBitmap(bitmap);
+            final Map<String, String> params = new HashMap<>();
+            final Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+            params.put("pic", bitmapToBase64(bitmap));
+
+            CardView cv_add_anime_pic = findViewById(R.id.cv_add_anime_pic);
+            final EditText add_anime_pic = cv_add_anime_pic.findViewById(R.id.add_anime_pic);
+
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, Constant.prefix_pic + "/wbp4j/", new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    add_anime_pic.setText(response);
+                    System.out.println(response);
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(AddAnimeActivity.this, "上传成功", Toast.LENGTH_SHORT).show();
+                    add_anime_pic.setText("图片过大&网络不好!!");
+                    System.out.println("上传图片连接错误" + error);
+                }
+            }){
+                @Override
+                protected Map<String, String> getParams() {
+                    return params;
+                }
+            };
+            stringRequest.setRetryPolicy(new DefaultRetryPolicy(20000,DefaultRetryPolicy.DEFAULT_MAX_RETRIES,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            /**
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, Constant.prefix + "/wbp4j/", new JSONObject(), new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    System.out.println(response);
+                    try {
+                        if (response.getString("result").equals("SUCCESS")) {
+                            add_anime_pic.setText(response.getJSONObject("imageInfo").getString("large"));
+                        } else add_anime_pic.setText("上传失败，请重试");
+                    } catch (JSONException e) {
+                        add_anime_pic.setText("上传失败，请重试");
+                        e.printStackTrace();
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    add_anime_pic.setText("上传失败，请重试");
+                    System.out.println("图片上传失败" + error.getMessage());
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() {
+                    return params;
+                }
+            };*/
+            requestQueue.add(stringRequest);
         } else {
             Toast.makeText(this, "打开失败", Toast.LENGTH_SHORT).show();
         }
-        return "请重试，上传失败";
+    }
+
+    public static String bitmapToBase64(Bitmap bitmap) {
+        String result = null;
+        ByteArrayOutputStream baos = null;
+        try {
+            if (bitmap != null) {
+                baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                baos.flush();
+                baos.close();
+                byte[] bitmapBytes = baos.toByteArray();
+                result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (baos != null) {
+                    baos.flush();
+                    baos.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
     }
 
     private void AddAnime() {

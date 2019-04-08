@@ -2,6 +2,7 @@ package cn.lzumi.mfanime.tools;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.service.carrier.CarrierMessagingService;
 import android.util.Base64;
 
 import com.android.volley.AuthFailureError;
@@ -82,6 +83,8 @@ public class HttpRequest {
             @Override
             public void onErrorResponse(VolleyError error) {
                 System.out.println("连接错误" + error.getMessage());
+                //CarrierMessagingService.SendMultipartSmsResult
+
             }
         }) {
             @Override
@@ -94,49 +97,23 @@ public class HttpRequest {
         requestQueue.add(stringRequest);
     }
 
-    public static void picStringPost(final Bitmap bitmap, String url, RequestQueue requestQueue, final Map<String, String> params, Response.Listener<String> listener){
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
-                listener, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                System.out.println("连接错误" + error.getMessage());
-            }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                params.put("file",bitmapToBase64(bitmap));
-                return params;
-            }
-        };
+//    public static void picStringPost(final Bitmap bitmap, String url, RequestQueue requestQueue, final Map<String, String> params, Response.Listener<String> listener){
+//        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+//                listener, new Response.ErrorListener() {
+//            @Override
+//            public void onErrorResponse(VolleyError error) {
+//                System.out.println("连接错误" + error.getMessage());
+//            }
+//        }) {
+//            @Override
+//            protected Map<String, String> getParams() throws AuthFailureError {
+//                params.put("file",bitmapToBase64(bitmap));
+//                return params;
+//            }
+//        };
+//
+//
+//        requestQueue.add(stringRequest);
+//    }
 
-
-        requestQueue.add(stringRequest);
-    }
-
-    public static String bitmapToBase64(Bitmap bitmap) {
-        String result = null;
-        ByteArrayOutputStream baos = null;
-        try {
-            if (bitmap != null) {
-                baos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                baos.flush();
-                baos.close();
-                byte[] bitmapBytes = baos.toByteArray();
-                result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (baos != null) {
-                    baos.flush();
-                    baos.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return result;
-    }
 }
