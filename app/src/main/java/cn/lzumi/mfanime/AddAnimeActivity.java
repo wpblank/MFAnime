@@ -41,6 +41,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
+import com.bumptech.glide.Glide;
 import com.google.gson.JsonObject;
 
 import org.json.JSONException;
@@ -80,7 +81,7 @@ public class AddAnimeActivity extends BaseActivity {
         //HTTPSTrustManager.allowAllSSL();
         requestQueue = HttpRequest.getRequestQueue(AddAnimeActivity.this);
 
-        imageView = findViewById(R.id.test_img);
+        imageView = findViewById(R.id.add_anime_pic_show);
         Button button = findViewById(R.id.btn_add_anime_pic);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,106 +93,24 @@ public class AddAnimeActivity extends BaseActivity {
                  } catch (FileNotFoundException e) {
                  e.printStackTrace();
                  }*/
-                //尝试获取权限
-                if (ContextCompat.checkSelfPermission(AddAnimeActivity.this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(AddAnimeActivity.this,
-                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-                } else {
-                    openAlbum();
-                }
+                //打开相册并上传,继承自 BaseActivity。
+                openAlbum(AddAnimeActivity.this,AddAnimeActivity.this);
             }
         });
         AddAnime();
     }
 
-    private void openAlbum() {
-        Intent intent = new Intent("android.intent.action.GET_CONTENT");
-        intent.setType("image/*");
-        startActivityForResult(intent, 2); // 打开相册
-    }
+//    public void displayImage(String imagePath) {
+//        if (imagePath != null) {
+//            Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+//            imageView.setImageBitmap(bitmap);
+//        } else {
+//            Toast.makeText(this, "打开失败", Toast.LENGTH_SHORT).show();
+//        }
+//    }
 
-
-    //ActivityCompat.requestPermissions() 执行后执行
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        switch (requestCode) {
-            case 1:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    openAlbum();
-                } else {
-                    Toast toast = Toast.makeText(this, "You denied the permission", Toast.LENGTH_SHORT);
-                    toast.setText("打开失败");
-                    toast.show();
-                }
-                break;
-            default:
-        }
-    }
-
-
-    //从相册选择完图片回到 onActivityResult()方法 ，进行图片处理
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case 2:
-                if (resultCode == RESULT_OK)
-                    handleImageOnKitKat(data);
-                break;
-            default:
-                break;
-        }
-    }
-
-    @TargetApi(19)
-    private void handleImageOnKitKat(Intent data) {
-        String imagePath = null;
-        Uri uri = data.getData();
-        if (DocumentsContract.isDocumentUri(this, uri)) {
-            // 如果是document类型的Uri，则通过document id处理
-            String docId = DocumentsContract.getDocumentId(uri);
-            if ("com.android.providers.media.documents".equals(uri.getAuthority())) {
-                String id = docId.split(":")[1]; // 解析出数字格式的id
-                String selection = MediaStore.Images.Media._ID + "=" + id;
-                imagePath = getImagePath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, selection);
-            } else if ("com.android.providers.downloads.documents".equals(uri.getAuthority())) {
-                Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(docId));
-                imagePath = getImagePath(contentUri, null);
-            }
-        } else if ("content".equalsIgnoreCase(uri.getScheme())) {
-            // 如果是content类型的Uri，则使用普通方式处理
-            imagePath = getImagePath(uri, null);
-        } else if ("file".equalsIgnoreCase(uri.getScheme())) {
-            // 如果是file类型的Uri，直接获取图片路径即可
-            imagePath = uri.getPath();
-        }
-        displayImage(imagePath); // 根据图片路径显示图片
-        uploadImage(imagePath);
-    }
-
-    private String getImagePath(Uri uri, String selection) {
-        String path = null;
-        // 通过Uri和selection来获取真实的图片路径
-        Cursor cursor = getContentResolver().query(uri, null, selection, null, null);
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-            }
-            cursor.close();
-        }
-        return path;
-    }
-
-    private void displayImage(String imagePath) {
-        if (imagePath != null) {
-            Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
-            imageView.setImageBitmap(bitmap);
-        } else {
-            Toast.makeText(this, "打开失败", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void uploadImage(String imagePath) {
+    public void uploadImage(String imagePath) {
+        final Dialog dialog = WaitingInterface.createLoadingDialog(AddAnimeActivity.this, "上传中");
         if (imagePath != null) {
             final Map<String, String> params = new HashMap<>();
             final Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
@@ -203,7 +122,9 @@ public class AddAnimeActivity extends BaseActivity {
             StringRequest stringRequest = new StringRequest(Request.Method.POST, Constant.prefix_pic + "/wbp4j/", new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
+                    Glide.with(AddAnimeActivity.this).load(response).into(imageView);
                     add_anime_pic.setText(response);
+                    WaitingInterface.closeDialog(dialog);
                     System.out.println(response);
                 }
             }, new Response.ErrorListener() {
@@ -211,6 +132,7 @@ public class AddAnimeActivity extends BaseActivity {
                 public void onErrorResponse(VolleyError error) {
                     Toast.makeText(AddAnimeActivity.this, "上传成功", Toast.LENGTH_SHORT).show();
                     add_anime_pic.setText("图片过大&网络不好!!");
+                    WaitingInterface.closeDialog(dialog);
                     System.out.println("上传图片连接错误" + error);
                 }
             }){
@@ -219,64 +141,13 @@ public class AddAnimeActivity extends BaseActivity {
                     return params;
                 }
             };
+            //因为图片过大上传时间不定，等待时间设置长一些
             stringRequest.setRetryPolicy(new DefaultRetryPolicy(20000,DefaultRetryPolicy.DEFAULT_MAX_RETRIES,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-            /**
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, Constant.prefix + "/wbp4j/", new JSONObject(), new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    System.out.println(response);
-                    try {
-                        if (response.getString("result").equals("SUCCESS")) {
-                            add_anime_pic.setText(response.getJSONObject("imageInfo").getString("large"));
-                        } else add_anime_pic.setText("上传失败，请重试");
-                    } catch (JSONException e) {
-                        add_anime_pic.setText("上传失败，请重试");
-                        e.printStackTrace();
-                    }
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    add_anime_pic.setText("上传失败，请重试");
-                    System.out.println("图片上传失败" + error.getMessage());
-                }
-            }) {
-                @Override
-                protected Map<String, String> getParams() {
-                    return params;
-                }
-            };*/
             requestQueue.add(stringRequest);
         } else {
+            WaitingInterface.closeDialog(dialog);
             Toast.makeText(this, "打开失败", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    public static String bitmapToBase64(Bitmap bitmap) {
-        String result = null;
-        ByteArrayOutputStream baos = null;
-        try {
-            if (bitmap != null) {
-                baos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-                baos.flush();
-                baos.close();
-                byte[] bitmapBytes = baos.toByteArray();
-                result = Base64.encodeToString(bitmapBytes, Base64.DEFAULT);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (baos != null) {
-                    baos.flush();
-                    baos.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return result;
     }
 
     private void AddAnime() {
