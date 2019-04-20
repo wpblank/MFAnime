@@ -152,11 +152,27 @@ public class MainActivity extends BaseActivity
                         imageView.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                openAlbum(MainActivity.this,MainActivity.this);
-                                //跳转个人资料界面
+                                AlertDialog.Builder normalDialog = new AlertDialog.Builder(MainActivity.this);
+                                normalDialog.setMessage("修改头像?");
+                                normalDialog.setPositiveButton("取消",
+                                        new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                //Nothing-To-do
+                                            }
+                                        });
+                                normalDialog.setNegativeButton("确定",
+                                        new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                openAlbum(MainActivity.this,MainActivity.this);
+                                            }
+                                        });
+                                normalDialog.show();
+                                /*跳转个人资料界面
                                 Toast toast = Toast.makeText(MainActivity.this, "已登录", Toast.LENGTH_SHORT);
                                 toast.setText("已登录");
-                                toast.show();
+                                toast.show();*/
                             }
                         });
 
@@ -350,7 +366,7 @@ public class MainActivity extends BaseActivity
     public void showNormalDialog() {
         final AlertDialog.Builder normalDialog =
                 new AlertDialog.Builder(MainActivity.this);
-        normalDialog.setTitle("尚未登陆，不也能添加动画");
+        normalDialog.setTitle("尚未登陆，不能添加动画");
         normalDialog.setMessage("是否登录?");
         normalDialog.setPositiveButton("取消",
                 new DialogInterface.OnClickListener() {

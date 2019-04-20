@@ -86,15 +86,8 @@ public class AddAnimeActivity extends BaseActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /**FileInputStream fis = null;
-                 try {
-                 fis = new FileInputStream("图片的路径");
-                 Bitmap bitmap = BitmapFactory.decodeStream(fis);
-                 } catch (FileNotFoundException e) {
-                 e.printStackTrace();
-                 }*/
                 //打开相册并上传,继承自 BaseActivity。
-                openAlbum(AddAnimeActivity.this,AddAnimeActivity.this);
+                openAlbum(AddAnimeActivity.this, AddAnimeActivity.this);
             }
         });
         AddAnime();
@@ -130,19 +123,19 @@ public class AddAnimeActivity extends BaseActivity {
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    Toast.makeText(AddAnimeActivity.this, "上传成功", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddAnimeActivity.this, "上传失败", Toast.LENGTH_SHORT).show();
                     add_anime_pic.setText("图片过大&网络不好!!");
                     WaitingInterface.closeDialog(dialog);
                     System.out.println("上传图片连接错误" + error);
                 }
-            }){
+            }) {
                 @Override
                 protected Map<String, String> getParams() {
                     return params;
                 }
             };
             //因为图片过大上传时间不定，等待时间设置长一些
-            stringRequest.setRetryPolicy(new DefaultRetryPolicy(20000,DefaultRetryPolicy.DEFAULT_MAX_RETRIES,DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            stringRequest.setRetryPolicy(new DefaultRetryPolicy(20000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
             requestQueue.add(stringRequest);
         } else {
             WaitingInterface.closeDialog(dialog);
